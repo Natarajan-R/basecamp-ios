@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basecamp</title>
+    <meta http-equiv="content-language" content="en"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.css"></link>
+
+    <style rel="stylesheet">
+    body {  background: #ddd; }
+    .ui-body-c a.ui-link { color: #008595; font-weight: bold; text-decoration: none; }
+    .hidden { display:none; }
+    h1 { font-size: 14px; }
+    p { font-size: 12px; font-weight: normal; }
+    .iw { background:#eee; padding:10px 10px 10px 10px; width:400px; }
+    .iw-description { font-size: 12px; font-weight: normal; }
+    .more { text-align: center; }
+    </style>
+
+<script src="http://www.google.com/jsapi" type="text/javascript"></script>
+
+<script src="http://maps.google.com/maps/api/js?sensor=true" type="text/javascript"></script>
+
+<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.mobile-1.0rc3.min.js"></script>
+
+<script type="text/javascript" src="js/jquery-ui.min.js" ></script>
+<script type="text/javascript" src="js/jquery.ui.map.js"></script>
+<script type="text/javascript" src="js/jquery.ui.map.extensions.js"></script>
+
+    
+<script type="text/javascript" charset="utf-8" src="js/main.js"></script>
+<script type="text/javascript" charset="utf-8" src="phonegap-1.4.1.js"></script>    
+
+<script type="text/javascript">
+    // Demonstration purpose only...
+    $(document).bind("mobileinit", function () {
+    $.mobile.ajaxEnabled  = true;
+    });
+    </script>
+    <script type="text/javascript">
+    $(function() {
+ 			var useragent = navigator.userAgent;
+  			var mapdiv = document.getElementById("map_canvas_2");
+ 			var mapitem = document.getElementById("map_item");
+  			var doc = document.getElementById("doc");
+			//var gmapinfo = document.getElementById("gmap-info");
+       
+  			if ((useragent.indexOf('Android 3.') != -1) && (screen.width >= 800) && (screen.height >= 800)) {
+ 				doc.style.width = '780px';
+ 				doc.style.maxWidth = '1240px';
+				//doc.style.margin = 'auto';  //  '0 0.4em';
+  				//doc.style.padding = '0 0.8em';
+  					  				
+ 				mapdiv.style.height = '580px';
+ 					
+ 				//mapitem.style.margin = '0 0 1.5em';
+ 				//mapitem.style.padding = '0.8em';
+				gmapinfo.style.display = 'block';
+			} else if ((useragent.indexOf('Android 2.') != -1 ) || (useragent.indexOf('Android 3.') != -1 )) {
+ 				//alert('android phone');
+ 				doc.style.width = screen.width;
+ 				doc.style.maxWidth = '490px';
+  				//doc.style.margin = '0 0.2em';
+  				//doc.style.padding = '0 0.3em';
+  					
+ 				mapdiv.style.height = '400px';
+ 				
+ 				//mapitem.style.margin = '0 0 1em';
+ 				//mapitem.style.padding = '0.4em';
+ 			} else {	
+  				//alert('desktop or not android');
+  				doc.style.width = '900px';
+  				doc.style.minWidth = '800px';
+  				doc.style.maxWidth = '900px';
+  				//doc.style.margin = 'auto';
+  				//doc.style.padding = '2em';
+  					
+    			mapdiv.style.height = '900px';
+    				
+ 				//mapitem.style.margin = '0 0 2em';
+ 				//mapitem.style.padding = '1em';
+				//gmapinfo.style.display = 'block';
+  			}
+  			});
+        
+        /*if(navigator.geolocation){
+            
+            function getLatLng(position) {
+                var point = new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+                
+                myOptions = {
+                    zoom: 15,
+                    center: point,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                },
+                
+                mapDiv = document.getElementById("map_canvas_2"),
+                map = new google.maps.Map(mapDiv, myOptions),
+                
+                image = 'marker-green.png',
+                
+                marker = new google.maps.Marker({
+                                                position: point,
+                                                map: map,
+                                                icon:image,
+                                                title: "You are here"
+                                                });
+            }
+            navigator.geolocation.getCurrentPosition(getLatLng);
+            
+        };*/   
+    
+     function getLatLng() {
+         alert('Alert!');
+            if(navigator.geolocation){
+                return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);
+                navigator.geolocation.getCurrentPosition(hasPosition); 
+            }
+        navigator.geolocation.getCurrentPosition(getLatLng);
+     }
+     
+     
+        
+    $(function() {
+				$('#map_canvas_2').gmap({'center': getLatLng(), 'zoom': 15}).bind('init', function() { 
+					$.getJSON( 'http://basecamp.blueridgeoutdoors.com/mconnect/connect.php', function(data) { 
+						$.each( data.markers1, function(i, m) {
+							$('#map_canvas_2').gmap('addMarker', { 'position': new google.maps.LatLng(m.geo_latitude, m.geo_longitude), 'bounds': false },
+							function(map, marker) {
+                            var directionURL = "http://maps.google.com/maps?q="+m.geo_latitude+","+m.geo_longitude+"&t=m";
+                            var content = '<div class="iw"><h1 class="iw-summary">'+m.post_title+'</h1><p class="iw-description">'+m.post_excerpt+'</p><a href='+directionURL+'>Get Directions</a></div>';
+                            var iw = $('#map_canvas_2').gmap('addInfoWindow', { 'position':marker.getPosition(), 'content': content }, function(iw) {
+                                $(marker).click(function() {
+                                    iw.open(map, marker);
+                                    map.panTo(marker.getPosition());
+                                });
+                            });
+
+                        }
+							 );
+						});
+					});
+				});
+            });
+        
+		</script>
+    
+    
+  
+
+</head>
+
+<body>
+
+        <div id="doc">
+        <div id="gmap-4" data-role="page" data-theme="b">
+        <div data-role="header">
+            <a href="" data-role="button" data-rel="back" data-icon="arrow-l">Back</a><h1>Basecamp</h1><a href="index.html" class="ui-btn-right" data-role="button" data-icon="home" data-iconpos="right">Home</a>
+        </div>
+        <div class="page" data-role="content">
+
+            <div>
+            	<div id="map_item">
+                <div id="map_canvas_2"></div>
+            	</div>
+            </div>
+
+        </div>
+        <div data-role="footer" data-position="fixed">
+            <div data-role="navbar">
+                <ul>
+                    <!--<li><a href="" data-rel="back" data-icon="arrow-l">Back</a></li>-->
+                    <li><a href="index.html" data-icon="grid" data-ajax="false">List</a></li>
+                    <!--<li><a href="about.html" data-rel="dialog" data-transition="slidedown" data-icon="info">About</a></li>-->
+                    <li><a href="index.html" data-icon="home" data-ajax="false">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
